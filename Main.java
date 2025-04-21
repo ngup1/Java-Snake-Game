@@ -17,7 +17,7 @@ public class Main{
         frame.setVisible(true);
         frame.pack();
 
-        game.StartGaame(); // Start the game after the frame is visible
+        game.StartGame(); // Start the game after the frame is visible
 
     }
 

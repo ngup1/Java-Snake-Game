@@ -21,6 +21,7 @@ public class SnakeGame extends JPanel{
     }
 
 public void StartGame(){
+    
     repaint(); // Call repaint to trigger the paintComponent method
 
 }
