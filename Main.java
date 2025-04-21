@@ -1,26 +1,20 @@
 import javax.swing.JFrame;
 
-public class Main{
+public class Main {
 
-    public static final int HEIGHT = 600;
-    public static final int WIDTH = 800;
-    public static void main(String[] args){
-        JFrame frame = new JFrame("Snake Game");
+    private static final int WIDTH = 800;
+    private static final int HEIGHT = 600;
+
+    public static void main(String[] args) {
+        final JFrame frame = new JFrame("Snake Game");
         frame.setSize(WIDTH, HEIGHT);
-
-        SnakeGame game = new SnakeGame(WIDTH, HEIGHT);   
+        final SnakeGame game = new SnakeGame(WIDTH, HEIGHT);
         frame.add(game);
-
+        frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         frame.pack();
-
-        game.StartGame(); // Start the game after the frame is visible
-
+        game.startGame();
     }
-
 }
-
-
