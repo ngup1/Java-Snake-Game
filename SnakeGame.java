@@ -10,6 +10,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.font.TextLayout;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -26,7 +28,8 @@ public class SnakeGame extends JPanel implements ActionListener {
     private GamePoint food;
     private Direction direction = Direction.RIGHT;
     private Direction newDirection = Direction.RIGHT;
-    private final List<GamePoint> snake = new ArrayList<>();
+    private final Deque<GamePoint> snake = new LinkedList<>();
+
 
     public SnakeGame(final int width, final int height) {
         this.width = width;
@@ -145,7 +148,7 @@ public class SnakeGame extends JPanel implements ActionListener {
 
     private void move() {
         direction = newDirection;
-
+    
         final GamePoint head = snake.getFirst();
         final GamePoint newHead = switch (direction) {
             case UP -> new GamePoint(head.x, head.y - cellSize);
@@ -153,14 +156,23 @@ public class SnakeGame extends JPanel implements ActionListener {
             case LEFT -> new GamePoint(head.x - cellSize, head.y);
             case RIGHT -> new GamePoint(head.x + cellSize, head.y);
         };
+    
+        // Check for out-of-bounds
+        if (newHead.x < 0 || newHead.x >= width || newHead.y < 0 || newHead.y >= height) {
+            gameOver = true;
+            return;
+        }
+    
+        // Continue normal movement
         snake.addFirst(newHead);
-
+    
         if (newHead.equals(food)) {
             generateFood();
         } else {
             snake.removeLast();
         }
     }
+    
 
     @Override
     public void actionPerformed(final ActionEvent e) {
