@@ -1,191 +1,123 @@
-import javax.swing.JPanel;
-import javax.swing.Timer;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.font.TextLayout;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
 
 public class SnakeGame extends JPanel implements ActionListener {
-
     private final int width;
     private final int height;
     private final int cellSize;
-    private final Random random = new Random();
     private static final int FRAME_RATE = 20;
+    private final GameController controller;
     private boolean gameStarted = false;
     private boolean gameOver = false;
     private int highScore;
-    private GamePoint food;
-    private Direction direction = Direction.RIGHT;
-    private Direction newDirection = Direction.RIGHT;
-    private final Deque<GamePoint> snake = new LinkedList<>();
 
-
-    public SnakeGame(final int width, final int height) {
+    public SnakeGame(int width, int height) {
         this.width = width;
         this.height = height;
         this.cellSize = width / (FRAME_RATE * 2);
+        this.controller = new GameController(width, height, cellSize);
         setPreferredSize(new Dimension(width, height));
-        setBackground(new Color(0, 0, 128)); // Navy blue color
+        setBackground(new Color(0, 0, 128));
     }
 
     public void startGame() {
-        resetGameData();
+        controller.reset();
+        gameStarted = false;
+        gameOver = false;
         setFocusable(true);
-        setFocusTraversalKeysEnabled(false);
         requestFocusInWindow();
         addKeyListener(new KeyAdapter() {
             @Override
-            public void keyPressed(final KeyEvent e) {
+            public void keyPressed(KeyEvent e) {
                 handleKeyEvent(e.getKeyCode());
             }
         });
         new Timer(1000 / FRAME_RATE, this).start();
     }
 
-    private void handleKeyEvent(final int keyCode) {
-        if (!gameStarted) {
-            if (keyCode == KeyEvent.VK_SPACE) {
-                gameStarted = true;
-            }
+    private void handleKeyEvent(int keyCode) {
+        if (!gameStarted && keyCode == KeyEvent.VK_SPACE) {
+            gameStarted = true;
         } else if (!gameOver) {
             switch (keyCode) {
-                case KeyEvent.VK_UP:
-                    if (direction != Direction.DOWN) {
-                        newDirection = Direction.UP;
-                    }
-                    break;
-                case KeyEvent.VK_DOWN:
-                    if (direction != Direction.UP) {
-                        newDirection = Direction.DOWN;
-                    }
-                    break;
-                case KeyEvent.VK_RIGHT:
-                    if (direction != Direction.LEFT) {
-                        newDirection = Direction.RIGHT;
-                    }
-                    break;
-                case KeyEvent.VK_LEFT:
-                    if (direction != Direction.RIGHT) {
-                        newDirection = Direction.LEFT;
-                    }
-                    break;
+                case KeyEvent.VK_UP -> controller.changeDirection(Direction.UP);
+                case KeyEvent.VK_DOWN -> controller.changeDirection(Direction.DOWN);
+                case KeyEvent.VK_LEFT -> controller.changeDirection(Direction.LEFT);
+                case KeyEvent.VK_RIGHT -> controller.changeDirection(Direction.RIGHT);
             }
         } else if (keyCode == KeyEvent.VK_SPACE) {
             gameStarted = false;
             gameOver = false;
-            resetGameData();
+            controller.reset();
         }
     }
 
-    private void resetGameData() {
-        snake.clear();
-        snake.add(new GamePoint(width / 2, height / 2));
-        generateFood();
-    }
-
-    private void generateFood() {
-        do {
-            food = new GamePoint(random.nextInt(width / cellSize) * cellSize,
-                    random.nextInt(height / cellSize) * cellSize);
-        } while (snake.contains(food));
-    }
-
     @Override
-    protected void paintComponent(final Graphics graphics) {
-        super.paintComponent(graphics);
-
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
         if (!gameStarted) {
-            printMessage(graphics, "Press Space Bar to Begin Game");
+            printMessage(g, "Press Space Bar to Begin Game");
         } else {
-            graphics.setColor(Color.RED);
-            graphics.fillRect(food.x, food.y, cellSize, cellSize);
-
-            Color snakeColor = Color.GREEN;
-            for (final var point : snake) {
-                graphics.setColor(snakeColor);
-                graphics.fillRect(point.x, point.y, cellSize, cellSize);
-                final int newGreen = (int) Math.round(snakeColor.getGreen() * (0.95));
-                snakeColor = new Color(0, newGreen, 0);
-            }
-
-            if (gameOver) {
-                final int currentScore = snake.size();
-                if (currentScore > highScore) {
-                    highScore = currentScore;
-                }
-                printMessage(graphics, "Your Score: " + currentScore
-                        + "\nHigh Score: " + highScore
-                        + "\nPress Space Bar to Reset");
-            }
+            drawGame(g);
         }
     }
 
-    private void printMessage(final Graphics graphics, final String message) {
-        graphics.setColor(Color.WHITE);
-        graphics.setFont(graphics.getFont().deriveFont(30F));
-        int currentHeight = height / 3;
-        final var graphics2D = (Graphics2D) graphics;
-        final var frc = graphics2D.getFontRenderContext();
-        for (final var line : message.split("\n")) {
-            final var layout = new TextLayout(line, graphics.getFont(), frc);
-            final var bounds = layout.getBounds();
-            final var targetWidth = (float) (width - bounds.getWidth()) / 2;
-            layout.draw(graphics2D, targetWidth, currentHeight);
-            currentHeight += graphics.getFontMetrics().getHeight();
+    private void drawGame(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+    g2d.setColor(new Color(0, 0, 64)); // Slightly lighter than background
+    g2d.setStroke(new BasicStroke(1));
+
+    // Draw vertical lines
+    for (int x = 0; x < getWidth(); x += controller.getCellSize()) {
+        g2d.drawLine(x, 0, x, getHeight());
+    }
+
+    // Draw horizontal lines
+    for (int y = 0; y < getHeight(); y += controller.getCellSize()) {
+        g2d.drawLine(0, y, getWidth(), y);
+    }
+        g.setColor(Color.RED);
+        GamePoint food = controller.getFood();
+        g.fillRect(food.x(), food.y(), cellSize, cellSize);
+
+        Color snakeColor = Color.GREEN;
+        for (GamePoint point : controller.getSnake().getBody()) {
+            g.setColor(snakeColor);
+            g.fillRect(point.x(), point.y(), cellSize, cellSize);
+            int newGreen = (int) (snakeColor.getGreen() * 0.95);
+            snakeColor = new Color(0, newGreen, 0);
+        }
+
+        if (gameOver) {
+            int score = controller.getSnake().size();
+            if (score > highScore) highScore = score;
+            printMessage(g, "Your Score: " + score + "\nHigh Score: " + highScore + "\nPress Space Bar to Reset");
         }
     }
 
-    private void move() {
-        direction = newDirection;
-    
-        final GamePoint head = snake.getFirst();
-        final GamePoint newHead = switch (direction) {
-            case UP -> new GamePoint(head.x, head.y - cellSize);
-            case DOWN -> new GamePoint(head.x, head.y + cellSize);
-            case LEFT -> new GamePoint(head.x - cellSize, head.y);
-            case RIGHT -> new GamePoint(head.x + cellSize, head.y);
-        };
-    
-        // Check for out-of-bounds
-        if (newHead.x < 0 || newHead.x >= width || newHead.y < 0 || newHead.y >= height) {
-            gameOver = true;
-            return;
-        }
-    
-        // Continue normal movement
-        snake.addFirst(newHead);
-    
-        if (newHead.equals(food)) {
-            generateFood();
-        } else {
-            snake.removeLast();
+    private void printMessage(Graphics g, String message) {
+        g.setColor(Color.WHITE);
+        g.setFont(g.getFont().deriveFont(30f));
+        int y = height / 3;
+        Graphics2D g2 = (Graphics2D) g;
+        var frc = g2.getFontRenderContext();
+
+        for (String line : message.split("\n")) {
+            TextLayout layout = new TextLayout(line, g.getFont(), frc);
+            var bounds = layout.getBounds();
+            float x = (float) (width - bounds.getWidth()) / 2;
+            layout.draw(g2, x, y);
+            y += g.getFontMetrics().getHeight();
         }
     }
-    
 
     @Override
-    public void actionPerformed(final ActionEvent e) {
+    public void actionPerformed(ActionEvent e) {
         if (gameStarted && !gameOver) {
-            move();
+            gameOver = !controller.move();
         }
         repaint();
-    }
-
-    private record GamePoint(int x, int y) {
-    }
-
-    private enum Direction {
-        UP, DOWN, RIGHT, LEFT
     }
 }
