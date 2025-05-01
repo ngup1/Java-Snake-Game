@@ -1,4 +1,6 @@
+// Main.java
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 public class Main {
 
@@ -7,14 +9,13 @@ public class Main {
 
     public static void main(String[] args) {
         final JFrame frame = new JFrame("Snake Game");
-        frame.setSize(WIDTH, HEIGHT);
-        final SnakeGame game = new SnakeGame(WIDTH, HEIGHT);
-        frame.add(game);
-        frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setVisible(true);
+        
+        SnakeGame game = new SnakeGame(WIDTH, HEIGHT);
+        frame.add(game);
         frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
         game.startGame();
     }
-}
+} 
