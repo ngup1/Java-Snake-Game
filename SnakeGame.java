@@ -7,17 +7,28 @@ public class SnakeGame extends JPanel implements ActionListener {
     private final int width;
     private final int height;
     private final int cellSize;
+<<<<<<< HEAD
     private final int delay;
+=======
+    private static final int FRAME_RATE = 20;
+>>>>>>> 1391fd01f4a9ce3a19fdea145ee4e6adc0d97b45
     private final GameController controller;
     private boolean gameStarted = false;
     private boolean gameOver = false;
     private int highScore;
 
+<<<<<<< HEAD
     public SnakeGame(int width, int height, int delay) {
         this.width = width;
         this.height = height;
         this.delay = delay;
         this.cellSize = width / 40;
+=======
+    public SnakeGame(int width, int height) {
+        this.width = width;
+        this.height = height;
+        this.cellSize = width / (FRAME_RATE * 2);
+>>>>>>> 1391fd01f4a9ce3a19fdea145ee4e6adc0d97b45
         this.controller = new GameController(width, height, cellSize);
         setPreferredSize(new Dimension(width, height));
         setBackground(new Color(0, 0, 128));
@@ -67,6 +78,7 @@ public class SnakeGame extends JPanel implements ActionListener {
 
     private void drawGame(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
+<<<<<<< HEAD
         g2d.setColor(new Color(0, 0, 64));
         g2d.setStroke(new BasicStroke(1));
 
@@ -77,6 +89,20 @@ public class SnakeGame extends JPanel implements ActionListener {
             g2d.drawLine(0, y, getWidth(), y);
         }
 
+=======
+    g2d.setColor(new Color(0, 0, 64)); // Slightly lighter than background
+    g2d.setStroke(new BasicStroke(1));
+
+    // Draw vertical lines
+    for (int x = 0; x < getWidth(); x += controller.getCellSize()) {
+        g2d.drawLine(x, 0, x, getHeight());
+    }
+
+    // Draw horizontal lines
+    for (int y = 0; y < getHeight(); y += controller.getCellSize()) {
+        g2d.drawLine(0, y, getWidth(), y);
+    }
+>>>>>>> 1391fd01f4a9ce3a19fdea145ee4e6adc0d97b45
         g.setColor(Color.RED);
         GamePoint food = controller.getFood();
         g.fillRect(food.x(), food.y(), cellSize, cellSize);
