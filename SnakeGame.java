@@ -7,28 +7,20 @@ public class SnakeGame extends JPanel implements ActionListener {
     private final int width;
     private final int height;
     private final int cellSize;
-<<<<<<< HEAD
-    private final int delay;
-=======
-    private static final int FRAME_RATE = 20;
->>>>>>> 1391fd01f4a9ce3a19fdea145ee4e6adc0d97b45
+    private double speed;
+    private double speedIncrease = 0.25;
     private final GameController controller;
     private boolean gameStarted = false;
     private boolean gameOver = false;
-    private int highScore;
+    private int highScore = 0;
+    private int currentScore = 0;
+    private Timer gameTimer;
+    private boolean difficultySelected = false;
 
-<<<<<<< HEAD
-    public SnakeGame(int width, int height, int delay) {
-        this.width = width;
-        this.height = height;
-        this.delay = delay;
-        this.cellSize = width / 40;
-=======
     public SnakeGame(int width, int height) {
         this.width = width;
         this.height = height;
-        this.cellSize = width / (FRAME_RATE * 2);
->>>>>>> 1391fd01f4a9ce3a19fdea145ee4e6adc0d97b45
+        this.cellSize = width / 40;
         this.controller = new GameController(width, height, cellSize);
         setPreferredSize(new Dimension(width, height));
         setBackground(new Color(0, 0, 128));
@@ -38,6 +30,8 @@ public class SnakeGame extends JPanel implements ActionListener {
         controller.reset();
         gameStarted = false;
         gameOver = false;
+        difficultySelected = false;
+        currentScore = 0;
         setFocusable(true);
         requestFocusInWindow();
         addKeyListener(new KeyAdapter() {
@@ -46,12 +40,33 @@ public class SnakeGame extends JPanel implements ActionListener {
                 handleKeyEvent(e.getKeyCode());
             }
         });
-        new Timer(delay, this).start();
+    }
+
+    private void initializeTimer() {
+        if (gameTimer != null) {
+            gameTimer.stop();
+        }
+        int delay = (int) (1000 / speed); // Convert speed to delay in milliseconds
+        gameTimer = new Timer(delay, this);
+        gameTimer.start();
     }
 
     private void handleKeyEvent(int keyCode) {
-        if (!gameStarted && keyCode == KeyEvent.VK_SPACE) {
-            gameStarted = true;
+        if (!difficultySelected) {
+            switch (keyCode) {
+                case KeyEvent.VK_1 -> { // Normal difficulty
+                    speed = 10;
+                    difficultySelected = true;
+                    gameStarted = true;
+                    initializeTimer();
+                }
+                case KeyEvent.VK_2 -> { // Hard difficulty
+                    speed = 20;
+                    difficultySelected = true;
+                    gameStarted = true;
+                    initializeTimer();
+                }
+            }
         } else if (!gameOver) {
             switch (keyCode) {
                 case KeyEvent.VK_UP -> controller.changeDirection(Direction.UP);
@@ -60,25 +75,31 @@ public class SnakeGame extends JPanel implements ActionListener {
                 case KeyEvent.VK_RIGHT -> controller.changeDirection(Direction.RIGHT);
             }
         } else if (keyCode == KeyEvent.VK_SPACE) {
-            gameStarted = false;
-            gameOver = false;
-            controller.reset();
+            startGame();
         }
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (!gameStarted) {
-            printMessage(g, "Press Space Bar to Begin Game");
+        if (!difficultySelected) {
+            printMessage(g, "Select Difficulty:\n1 - Normal\n2 - Hard");
         } else {
             drawGame(g);
+            // Draw current score and high score
+            drawScores(g);
         }
+    }
+
+    private void drawScores(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(g.getFont().deriveFont(20f));
+        g.drawString("Score: " + currentScore, 10, 30);
+        g.drawString("High Score: " + highScore, 10, 60);
     }
 
     private void drawGame(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
-<<<<<<< HEAD
         g2d.setColor(new Color(0, 0, 64));
         g2d.setStroke(new BasicStroke(1));
 
@@ -89,20 +110,6 @@ public class SnakeGame extends JPanel implements ActionListener {
             g2d.drawLine(0, y, getWidth(), y);
         }
 
-=======
-    g2d.setColor(new Color(0, 0, 64)); // Slightly lighter than background
-    g2d.setStroke(new BasicStroke(1));
-
-    // Draw vertical lines
-    for (int x = 0; x < getWidth(); x += controller.getCellSize()) {
-        g2d.drawLine(x, 0, x, getHeight());
-    }
-
-    // Draw horizontal lines
-    for (int y = 0; y < getHeight(); y += controller.getCellSize()) {
-        g2d.drawLine(0, y, getWidth(), y);
-    }
->>>>>>> 1391fd01f4a9ce3a19fdea145ee4e6adc0d97b45
         g.setColor(Color.RED);
         GamePoint food = controller.getFood();
         g.fillRect(food.x(), food.y(), cellSize, cellSize);
@@ -116,9 +123,12 @@ public class SnakeGame extends JPanel implements ActionListener {
         }
 
         if (gameOver) {
-            int score = controller.getSnake().size();
-            if (score > highScore) highScore = score;
-            printMessage(g, "Your Score: " + score + "\nHigh Score: " + highScore + "\nPress Space Bar to Reset");
+            if (currentScore > highScore) {
+                highScore = currentScore;
+            }
+            printMessage(g, "Game Over!\nYour Score: " + currentScore + 
+                          "\nHigh Score: " + highScore + 
+                          "\nPress Space Bar to Reset");
         }
     }
 
@@ -141,7 +151,13 @@ public class SnakeGame extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (gameStarted && !gameOver) {
-            gameOver = !controller.move();
+            if (!controller.move()) {
+                gameOver = true;
+            } else if (controller.hasEatenFood()) {
+                currentScore++;
+                speed += speedIncrease;
+                initializeTimer(); // Update timer with new speed
+            }
         }
         repaint();
     }

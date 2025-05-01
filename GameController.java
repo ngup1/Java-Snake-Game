@@ -9,6 +9,7 @@ public class GameController {
     private GamePoint food;
     private Direction direction = Direction.RIGHT;
     private Direction newDirection = Direction.RIGHT;
+    private boolean foodEaten = false;
 
     public GameController(int width, int height, int cellSize) {
         this.width = width;
@@ -63,6 +64,7 @@ public class GameController {
         if (newHead.equals(food)) {
             snake.grow(newHead);
             generateFood();
+            foodEaten = true;
         } else {
             snake.move(newHead);
         }
@@ -84,5 +86,11 @@ public class GameController {
             food = new GamePoint(random.nextInt(width / cellSize) * cellSize,
                                  random.nextInt(height / cellSize) * cellSize);
         } while (snake.contains(food));
+    }
+
+    public boolean hasEatenFood() {
+        boolean eaten = foodEaten;
+        foodEaten = false;
+        return eaten;
     }
 }
